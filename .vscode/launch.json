@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "node-server Attach to Node",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/node-server",
+            "port": 9229,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}/",
+            "protocol": "inspector",
+            "restart": true,
+            "sourceMaps": true
+        }
+    ]
+}
