@@ -1,13 +1,14 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Admin = require("../Models/admin");
+const mongoose = require("mongoose");
+const User = require("../Models/user");
 
 
-const adminRegister = (req, res, next) => {
-	Admin.find({ email: req.body.email })
+const userRegister = (req, res, next) => {
+	User.find({ email: req.body.email })
 		.exec()
-		.then((admin) => {
-			if (admin.length >= 1) {
+		.then((user) => {
+			if (user.length >= 1) {
         res.status(409).json({
           message:"Email Exists"
         })
@@ -18,23 +19,23 @@ const adminRegister = (req, res, next) => {
 							error: err,
 						});
 					} else {
-						const admin = new Admin({
-							_id: new mongoose.Types.ObjectId(),
+						const user = new User({
+							_id: mongoose.Types.ObjectId(),
 							email: req.body.email,
 							password: hash,
               name: req.body.name,
               phone_number: req.body.phone_number
 						});
-						admin
+						user
 							.save()
 							.then(async (result) => {
 								await result
 									.save()
 									.then((result1) => {
-                      console.log(`admin created ${result}`)
+                      console.log(`user created ${result}`)
                       res.status(201).json({
-                        adminDetails: {
-                          adminId: result._id,
+                        userDetails: {
+                          userId: result._id,
                           email: result.email,
                           name: result.name,
                           phone_number: result.phone_number,
@@ -67,17 +68,17 @@ const adminRegister = (req, res, next) => {
 }
 
 
-const adminLogin = (req, res, next) => {
-	Admin.find({ email: req.body.email })
+const userLogin = (req, res, next) => {
+	User.find({ email: req.body.email })
 		.exec()
-		.then((admin) => {
-      console.log(admin)
-			if (admin.length < 1) {
+		.then((user) => {
+      console.log(user)
+			if (user.length < 1) {
 				return res.status(401).json({
 					message: "Auth failed: Email not found probably",
 				});
 			}
-			bcrypt.compare(req.body.password, admin[0].password, (err, result) => {
+			bcrypt.compare(req.body.password, user[0].password, (err, result) => {
 				if (err) {
           console.log(err)
 					return res.status(401).json({
@@ -87,24 +88,24 @@ const adminLogin = (req, res, next) => {
 				if (result) {
 					const token = jwt.sign(
 						{
-              adminId: admin[0]._id,
-							email: admin[0].email,
-							name: admin[0].name,
-							phone_number: admin[0].phone_number,
+              userId: user[0]._id,
+							email: user[0].email,
+							name: user[0].name,
+							phone_number: user[0].phone_number,
 						},
 						process.env.jwtSecret,
 						{
 							expiresIn: "1d",
 						}
           );
-          console.log(admin[0])
+          console.log(user[0])
 					return res.status(200).json({
 						message: "Auth successful",
-						adminDetails: {
-							adminId: admin[0]._id,
-							name: admin[0].name,
-							email: admin[0].email,
-							phone_number: admin[0].phone_number,
+						userDetails: {
+							userId: user[0]._id,
+							name: user[0].name,
+							email: user[0].email,
+							phone_number: user[0].phone_number,
 						},
 						token: token,
 					});
@@ -122,12 +123,12 @@ const adminLogin = (req, res, next) => {
 }
 
 const getMe = async (req, res) => {
-	const adminId = req.admin.adminId;
-	const admin = await Admin.findById(adminId);
-	if (admin) {
+	const userId = req.user.userId;
+	const user = await User.findById(userId);
+	if (user) {
 		res.status(200).json({
 			message: "Found",
-			admin,
+			user,
 		});
 	} else {
 		res.status(400).json({
@@ -137,7 +138,7 @@ const getMe = async (req, res) => {
 };
 
 module.exports = {
-  adminLogin,
-  adminRegister,
+  userLogin,
+  userRegister,
 	getMe,
 };
